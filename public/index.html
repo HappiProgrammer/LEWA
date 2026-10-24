@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LEWA | Study Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="antialiased">
+    <div class="min-h-screen px-4 py-8 md:px-8">
+      <header class="mx-auto max-w-7xl">
+        <div class="topbar brand-bar">
+          <div class="brand-stack">
+            <p class="brand-kicker">Study smarter</p>
+            <h1 class="brand-title">LEWA</h1>
+          </div>
+
+          <div class="lang-toggle" id="languageToggle" aria-label="Language switch">
+            <button type="button" class="lang-option is-active" data-lang="en">EN</button>
+            <button type="button" class="lang-option" data-lang="fr">FR</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="mx-auto mt-8 max-w-7xl">
+        <section class="hero-grid">
+          <div class="left-panel panel-card">
+            <div class="section-heading-row">
+              <span class="eyebrow">Let's try it</span>
+            </div>
+
+            <h1 class="hero-title">
+              Best AI platform <span>to</span><br />
+              convert documents<br />
+              to quizzes instantly
+            </h1>
+
+            <p class="subcopy">
+              With LEWA, students can turn lecture notes and past exam questions into a focused revision dashboard in seconds.
+            </p>
+
+            <div class="cta-row">
+              <button id="submitBtn" class="primary-btn">Analyze</button>
+              <button id="clearBtn" class="secondary-btn">Clear</button>
+            </div>
+
+            <div class="mini-note">• Ready for quick exam prep</div>
+          </div>
+
+          <div class="right-panel panel-card illustration-panel">
+            <div class="illustration-wrap">
+              <img class="illustration-art" src="/Studying-bro.svg" alt="Student studying illustration" />
+            </div>
+          </div>
+        </section>
+
+        <section class="tool-grid">
+          <div class="input-panel panel-card large">
+            <div class="panel-header">
+              <h2 data-i18n="notesTitle">Lecture notes</h2>
+            </div>
+
+            <div class="upload-dropzone" data-input-id="notesFile" data-target-id="notesInput">
+              <input id="notesFile" type="file" accept=".txt,.md,.doc,.docx" />
+              <label class="upload-plus" for="notesFile" aria-label="Upload notes">+</label>
+              <p class="drop-caption">Drop file here<br /><span>or click to browse</span></p>
+            </div>
+
+            <textarea id="notesInput" rows="7" data-i18n-placeholder="notesPlaceholder" placeholder="Paste lecture notes or upload a text document..."></textarea>
+          </div>
+
+          <div class="input-panel panel-card large">
+            <div class="panel-header">
+              <h2 data-i18n="questionsTitle">Past questions</h2>
+            </div>
+
+            <div class="upload-dropzone" data-input-id="examFile" data-target-id="examInput">
+              <input id="examFile" type="file" accept=".txt,.md,.doc,.docx" />
+              <label class="upload-plus" for="examFile" aria-label="Upload exam questions">+</label>
+              <p class="drop-caption">Drop file here<br /><span>or click to browse</span></p>
+            </div>
+
+            <textarea id="examInput" rows="7" data-i18n-placeholder="questionsPlaceholder" placeholder="Paste sample questions or upload a past paper..."></textarea>
+          </div>
+        </section>
+
+        <section class="results-box panel-card" id="results">
+          <div class="results-header">
+            <h2>Exam strategy dashboard</h2>
+          </div>
+
+          <div id="summaryBox" class="summary-box">
+            Upload or paste notes and past questions to generate a revision strategy.
+          </div>
+
+          <div class="dashboard-grid">
+            <div class="priority-card red-card">
+              <div class="card-head">
+                <h3>High-Yield</h3>
+                <span>Must study</span>
+              </div>
+              <div id="highYieldList" class="stack"></div>
+            </div>
+
+            <div class="priority-card yellow-card">
+              <div class="card-head">
+                <h3>Blindspots</h3>
+                <span>At risk</span>
+              </div>
+              <div id="blindspotsList" class="stack"></div>
+            </div>
+
+            <div class="priority-card green-card">
+              <div class="card-head">
+                <h3>Low-Yield</h3>
+                <span>Skim only</span>
+              </div>
+              <div id="lowYieldList" class="stack"></div>
+            </div>
+          </div>
+
+          <div class="side-panels">
+            <div class="mini-panel">
+              <h4>Action plan</h4>
+              <div id="actionPlan" class="stack small-stack"></div>
+            </div>
+
+            <div class="mini-panel">
+              <h4>Section ranking</h4>
+              <div id="sectionList" class="stack small-stack"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
