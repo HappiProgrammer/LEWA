@@ -4,64 +4,38 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LEWA | Study Assistant</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
-  <body class="antialiased">
-    <div class="min-h-screen px-4 py-8 md:px-8">
-      <header class="mx-auto max-w-7xl">
-        <div class="topbar brand-bar">
-          <div class="brand-stack">
-            <p class="brand-kicker">Study smarter</p>
-            <h1 class="brand-title">LEWA</h1>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">L</span>
+          <div>
+            <p class="brand-name">LEWA</p>
+            <p class="brand-tag">Study assistant</p>
           </div>
+        </div>
 
-          <div class="lang-toggle" id="languageToggle" aria-label="Language switch">
-            <button type="button" class="lang-option is-active" data-lang="en">EN</button>
-            <button type="button" class="lang-option" data-lang="fr">FR</button>
-          </div>
+        <div class="lang-toggle" id="languageToggle" role="group" aria-label="Language">
+          <button type="button" class="lang-option is-active" data-lang="en" aria-pressed="true">EN</button>
+          <button type="button" class="lang-option" data-lang="fr" aria-pressed="false">FR</button>
         </div>
       </header>
 
-      <main class="mx-auto mt-8 max-w-7xl">
-        <section class="hero-grid">
-          <div class="left-panel panel-card">
-            <div class="section-heading-row">
-              <span class="eyebrow">Let's try it</span>
-            </div>
-
-            <h1 class="hero-title">
-              Best AI platform <span>to</span><br />
-              convert documents<br />
-              to quizzes instantly
-            </h1>
-
-            <p class="subcopy">
-              With LEWA, students can turn lecture notes and past exam questions into a focused revision dashboard in seconds.
-            </p>
-
-            <div class="cta-row">
-              <button id="submitBtn" class="primary-btn">Analyze</button>
-              <button id="clearBtn" class="secondary-btn">Clear</button>
-            </div>
-
-            <div class="mini-note">• Ready for quick exam prep</div>
-          </div>
-
-          <div class="right-panel panel-card illustration-panel">
-            <div class="illustration-wrap">
-              <img class="illustration-art" src="/Studying-bro.svg" alt="Student studying illustration" />
-            </div>
-          </div>
+      <main>
+        <section class="intro">
+          <h1>Exam revision, organized.</h1>
+          <p>Upload lecture notes and past questions to get a clear study plan: what to prioritize, what you are missing, and what you can skim.</p>
         </section>
 
         <section class="tool-grid">
-          <div class="input-panel panel-card large">
+          <div class="panel">
             <div class="panel-header">
               <h2 data-i18n="notesTitle">Lecture notes</h2>
             </div>
@@ -69,13 +43,13 @@
             <div class="upload-dropzone" data-input-id="notesFile" data-target-id="notesInput">
               <input id="notesFile" type="file" accept=".txt,.md,.doc,.docx,.pdf,.rtf,.csv,.json,.xml,.html,.htm,.yaml,.yml,.log" />
               <label class="upload-plus" for="notesFile" aria-label="Upload notes">+</label>
-              <p class="drop-caption">Drop file here<br /><span>or click to browse</span></p>
+              <p class="drop-caption">Drop a file here, or click to browse</p>
             </div>
 
-            <textarea id="notesInput" rows="7" data-i18n-placeholder="notesPlaceholder" placeholder="Paste lecture notes or upload a text document..."></textarea>
+            <textarea id="notesInput" rows="8" data-i18n-placeholder="notesPlaceholder" placeholder="Paste lecture notes or upload a document..."></textarea>
           </div>
 
-          <div class="input-panel panel-card large">
+          <div class="panel">
             <div class="panel-header">
               <h2 data-i18n="questionsTitle">Past questions</h2>
             </div>
@@ -83,16 +57,21 @@
             <div class="upload-dropzone" data-input-id="examFile" data-target-id="examInput">
               <input id="examFile" type="file" accept=".txt,.md,.doc,.docx,.pdf,.rtf,.csv,.json,.xml,.html,.htm,.yaml,.yml,.log" />
               <label class="upload-plus" for="examFile" aria-label="Upload exam questions">+</label>
-              <p class="drop-caption">Drop file here<br /><span>or click to browse</span></p>
+              <p class="drop-caption">Drop a file here, or click to browse</p>
             </div>
 
-            <textarea id="examInput" rows="7" data-i18n-placeholder="questionsPlaceholder" placeholder="Paste sample questions or upload a past paper..."></textarea>
+            <textarea id="examInput" rows="8" data-i18n-placeholder="questionsPlaceholder" placeholder="Paste sample questions or upload a past paper..."></textarea>
           </div>
         </section>
 
-        <section class="results-box panel-card" id="results">
+        <div class="cta-row">
+          <button id="submitBtn" class="primary-btn" type="button">Analyze</button>
+          <button id="clearBtn" class="secondary-btn" type="button">Clear</button>
+        </div>
+
+        <section class="results-box" id="results">
           <div class="results-header">
-            <h2>Exam strategy dashboard</h2>
+            <h2>Study plan</h2>
           </div>
 
           <div id="summaryBox" class="summary-box">
@@ -102,7 +81,7 @@
           <div class="dashboard-grid">
             <div class="priority-card red-card">
               <div class="card-head">
-                <h3>High-Yield</h3>
+                <h3>High-yield</h3>
                 <span>Must study</span>
               </div>
               <div id="highYieldList" class="stack"></div>
@@ -118,7 +97,7 @@
 
             <div class="priority-card green-card">
               <div class="card-head">
-                <h3>Low-Yield</h3>
+                <h3>Low-yield</h3>
                 <span>Skim only</span>
               </div>
               <div id="lowYieldList" class="stack"></div>

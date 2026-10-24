@@ -61,8 +61,8 @@ const demoData = {
 function setLoading(isLoading) {
   submitBtn.disabled = isLoading;
   submitBtn.innerHTML = isLoading
-    ? '<span class="inline-flex items-center gap-2"><span class="loader"></span>Analyzing...</span>'
-    : 'Analyze My Revision';
+    ? '<span class="btn-loading"><span class="loader"></span>Analyzing...</span>'
+    : 'Analyze';
 }
 
 const acceptedTextTypes = [
@@ -300,26 +300,26 @@ function attachDropzone(zone) {
 
 function renderSections(items) {
   if (!Array.isArray(items) || !items.length) {
-    sectionList.innerHTML = '<div class="rounded-xl border border-slate-700 bg-slate-950/60 p-3 text-sm text-slate-300">No section ranking available.</div>';
+    sectionList.innerHTML = '<div class="empty-state">No section ranking available.</div>';
     return;
   }
 
   const palette = {
-    'High-Yield': 'bg-emerald-500/15 text-emerald-200 border border-emerald-400/30',
-    'Blindspot': 'bg-yellow-500/15 text-yellow-200 border border-yellow-400/30',
-    'Low-Yield': 'bg-red-500/15 text-red-200 border border-red-400/30'
+    'High-Yield': 'pill-red',
+    'Blindspot': 'pill-yellow',
+    'Low-Yield': 'pill-green'
   };
 
   sectionList.innerHTML = items.map((item) => {
     const label = item.label || 'High-Yield';
     const rank = item.rank || 1;
     return `
-      <div class="rounded-xl border border-slate-700 bg-slate-950/60 p-3">
-        <div class="mb-2 flex items-center justify-between gap-2">
-          <span class="text-sm font-semibold text-slate-100">${rank}. ${item.section}</span>
-          <span class="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${palette[label] || palette['High-Yield']}">${label}</span>
+      <div class="rank-item">
+        <div class="rank-head">
+          <span class="rank-title">${rank}. ${item.section}</span>
+          <span class="rank-badge ${palette[label] || palette['High-Yield']}">${label}</span>
         </div>
-        <p class="text-xs leading-5 text-slate-300">${item.reason || 'Strong exam relevance.'}</p>
+        <p>${item.reason || 'Strong exam relevance.'}</p>
       </div>
     `;
   }).join('');
@@ -327,7 +327,7 @@ function renderSections(items) {
 
 function renderList(container, items, accent = 'cyan') {
   if (!Array.isArray(items) || !items.length) {
-    container.innerHTML = '<div class="result-card"><p>No items found.</p></div>';
+    container.innerHTML = '<div class="empty-state">No items found.</div>';
     return;
   }
 
@@ -338,18 +338,18 @@ function renderList(container, items, accent = 'cyan') {
     const confidence = typeof item.confidence === 'number' ? item.confidence : 0.8;
 
     const pillColorMap = {
-      red: 'bg-red-500/15 text-red-200 border border-red-400/30',
-      yellow: 'bg-yellow-500/15 text-yellow-200 border border-yellow-400/30',
-      emerald: 'bg-emerald-500/15 text-emerald-200 border border-emerald-400/30',
-      cyan: 'bg-cyan-500/15 text-cyan-200 border border-cyan-400/30'
+      red: 'pill-red',
+      yellow: 'pill-yellow',
+      emerald: 'pill-green',
+      cyan: ''
     };
 
     return `
       <div class="result-card">
         <strong>${topic}</strong>
-        <div class="mb-2"><span class="confidence-pill ${pillColorMap[accent]}">${confidence.toFixed(2)} confidence</span></div>
+        <span class="confidence-pill ${pillColorMap[accent] || ''}">${confidence.toFixed(2)} confidence</span>
         <p><strong>Why:</strong> ${reason}</p>
-        <p class="mt-2"><strong>Evidence:</strong> ${evidence}</p>
+        <p><strong>Evidence:</strong> ${evidence}</p>
       </div>
     `;
   }).join('');
@@ -357,17 +357,14 @@ function renderList(container, items, accent = 'cyan') {
 
 function renderActionPlan(items) {
   if (!Array.isArray(items) || !items.length) {
-    actionPlan.innerHTML = '<div class="rounded-xl border border-slate-700 bg-slate-950/60 p-3 text-slate-300">No action plan generated.</div>';
+    actionPlan.innerHTML = '<div class="empty-state">No action plan generated.</div>';
     return;
   }
 
   actionPlan.innerHTML = items.map((item, index) => `
-    <div class="rounded-xl border border-slate-700 bg-slate-950/60 p-3">
-      <div class="mb-1 flex items-center gap-2 text-cyan-300">
-        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500/10 text-xs font-bold">${index + 1}</span>
-        <span class="font-medium text-slate-100">Action</span>
-      </div>
-      <p class="text-sm leading-6 text-slate-300">${item}</p>
+    <div class="plan-item">
+      <span class="plan-index">${index + 1}</span>
+      <p>${item}</p>
     </div>
   `).join('');
 }
@@ -431,7 +428,7 @@ function setLanguage(lang) {
     en: {
       notesTitle: 'Lecture notes',
       questionsTitle: 'Past questions',
-      notesPlaceholder: 'Paste lecture notes or upload a text document...',
+      notesPlaceholder: 'Paste lecture notes or upload a document...',
       questionsPlaceholder: 'Paste sample questions or upload a past paper...'
     },
     fr: {
