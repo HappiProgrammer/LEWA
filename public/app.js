@@ -65,9 +65,121 @@ function setLoading(isLoading) {
     : 'Analyze My Revision';
 }
 
-function readUploadedFile(file) {
+const acceptedTextTypes = [
+  'txt', 'md', 'csv', 'json', 'log', 'xml', 'html', 'htm', 'yaml', 'yml', 'ini', 'sql', 'ts', 'js', 'css', 'scss', 'tex', 'rtf', 'pdf'
+];
+
+function getFileExtension(fileName = '') {
+  return (fileName.split('.').pop() || '').toLowerCase();
+}
+
+async function readPdfText(file) {
+  if (typeof pdfjsLib === 'undefined') {
+    throw new Error('PDF support is not available in this browser session.');
+  }
+
+  if (typeof pdfjsLib.GlobalWorkerOptions !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  const buffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  const parts = [];
+
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item) => ('str' in item ? item.str : ''))
+      .join(' ');
+
+    if (pageText.trim()) {
+      parts.push(pageText.trim());
+    }
+  }
+
+  const plainText = parts.join('\n').replace(/\s+/g, ' ').trim();
+  if (!plainText) {
+    throw new Error('This PDF file could not be converted to text. Please save it as .txt or .md first.');
+  }
+
+  return plainText;
+}
+
+async function readUploadedFile(file) {
   return new Promise((resolve, reject) => {
     if (!file) return reject(new Error('No file selected.'));
+
+    const extension = getFileExtension(file.name);
+    const fileName = file.name.toLowerCase();
+    const isPdf = extension === 'pdf' || file.type === 'application/pdf';
+    const isDocx = fileName.endsWith('.docx') || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    const isDoc = fileName.endsWith('.doc') || file.type === 'application/msword';
+
+    if (!acceptedTextTypes.includes(extension) && !isDocx && !isDoc && !isPdf && !file.type.startsWith('text/')) {
+      return reject(new Error('Unsupported file type. Please upload a text file or PDF (.txt, .md, .csv, .json, .xml, .pdf, .docx, etc).'));
+    }
+
+    if (isPdf) {
+      readPdfText(file)
+        .then((text) => resolve(text))
+        .catch((error) => reject(error));
+      return;
+    }
+
+    if (isDocx) {
+      if (typeof JSZip === 'undefined') {
+        return reject(new Error('Word document support is not available in this browser session.'));
+      }
+
+      file.arrayBuffer()
+        .then(async (buffer) => {
+          const zip = await JSZip.loadAsync(buffer);
+          const docXml = zip.file('word/document.xml');
+          if (!docXml) {
+            throw new Error('The document file does not contain readable text content.');
+          }
+
+          const xmlText = await docXml.async('string');
+          const matches = [...xmlText.matchAll(/<w:t[^>]*>(.*?)<\/w:t>/gs)];
+          const plainText = matches
+            .map((match) => match[1])
+            .join(' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          if (!plainText) {
+            throw new Error('This DOCX file could not be converted to text. Please convert it to .txt or .md first.');
+          }
+
+          resolve(plainText);
+        })
+        .catch((error) => reject(error));
+      return;
+    }
+
+    if (isDoc) {
+      file.arrayBuffer()
+        .then((buffer) => {
+          const bytes = new Uint8Array(buffer);
+          let text = '';
+          for (let i = 0; i < bytes.length && i < 200000; i += 1) {
+            const byte = bytes[i];
+            if (byte === 0) continue;
+            if (byte >= 32 || byte === 9 || byte === 10 || byte === 13) {
+              text += String.fromCharCode(byte);
+            }
+          }
+
+          const cleaned = text.replace(/\u0000/g, ' ').replace(/\s+/g, ' ').trim();
+          if (!cleaned) {
+            throw new Error('This DOC file does not contain extractable text. Please save it as .txt or .md first.');
+          }
+          resolve(cleaned);
+        })
+        .catch((error) => reject(error));
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ''));
@@ -88,6 +200,34 @@ async function handleFileUpload(event, targetInput) {
   }
 }
 
+async function handleDroppedFile(file, targetInput) {
+  if (!file) return;
+
+  try {
+    const text = await readUploadedFile(file);
+    targetInput.value = text.trim();
+  } catch (error) {
+    summaryBox.textContent = error.message || 'The dropped file could not be read.';
+  }
+}
+
+function handlePaste(event, targetInput) {
+  const pastedFiles = Array.from(event.clipboardData?.files || []);
+  if (pastedFiles.length > 0) {
+    event.preventDefault();
+    const [file] = pastedFiles;
+    handleDroppedFile(file, targetInput);
+    return;
+  }
+
+  const pastedText = event.clipboardData?.getData('text/plain');
+  if (pastedText) {
+    event.preventDefault();
+    const currentValue = targetInput.value.trim();
+    targetInput.value = currentValue ? `${currentValue}\n\n${pastedText}` : pastedText;
+  }
+}
+
 function attachDropzone(zone) {
   const inputId = zone.dataset.inputId;
   const textAreaId = zone.dataset.targetId;
@@ -98,27 +238,62 @@ function attachDropzone(zone) {
 
   const activate = (event) => {
     event.preventDefault();
+    event.stopPropagation();
     zone.classList.add('is-dragging');
+    target.classList.add('is-dragging');
   };
 
-  const deactivate = () => zone.classList.remove('is-dragging');
+  const deactivate = () => {
+    zone.classList.remove('is-dragging');
+    target.classList.remove('is-dragging');
+  };
 
   zone.addEventListener('click', (event) => {
-    if (event.target === input) return;
+    if (event.target.closest('.upload-plus') || event.target === input) {
+      input.click();
+      return;
+    }
+    if (event.target !== zone) {
+      return;
+    }
     input.click();
   });
 
   zone.addEventListener('dragover', activate);
   zone.addEventListener('dragenter', activate);
-  zone.addEventListener('dragleave', deactivate);
-  zone.addEventListener('drop', (event) => {
+  zone.addEventListener('dragleave', (event) => {
+    if (!zone.contains(event.relatedTarget)) {
+      deactivate();
+    }
+  });
+
+  zone.addEventListener('drop', async (event) => {
     event.preventDefault();
+    event.stopPropagation();
     deactivate();
     const file = event.dataTransfer?.files?.[0];
-    if (!file) return;
-    input.files = event.dataTransfer.files;
-    handleFileUpload({ target: input }, target);
+    if (file) {
+      await handleDroppedFile(file, target);
+    }
   });
+
+  target.addEventListener('dragover', activate);
+  target.addEventListener('dragenter', activate);
+  target.addEventListener('dragleave', (event) => {
+    if (!target.contains(event.relatedTarget)) {
+      deactivate();
+    }
+  });
+  target.addEventListener('drop', async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    deactivate();
+    const file = event.dataTransfer?.files?.[0];
+    if (file) {
+      await handleDroppedFile(file, target);
+    }
+  });
+  target.addEventListener('paste', (event) => handlePaste(event, target));
 
   input.addEventListener('change', (event) => handleFileUpload(event, target));
 }
